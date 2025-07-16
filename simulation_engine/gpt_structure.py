@@ -51,6 +51,36 @@ def generate_prompt(prompt_input: Union[str, List[str]],
 # ============================================================================
 
 def gpt_request(prompt: str, 
+                model: str = "llama2", 
+                max_tokens: int = 1500) -> str:
+  """Make a request to OpenAI's GPT model."""
+  if model == "llama2": 
+    try:
+      client = openai.OpenAI(base_url = 'http://localhost:11434/v1', api_key='ollama')
+      response = client.chat.completions.create(
+        model=model,
+        messages=[{"role": "user", "content": prompt}]
+      ) 
+      print(response)
+      return response.choices[0].message.content
+    except Exception as e:
+      return f"GENERATION ERROR: {str(e)}"
+
+  try:
+    client = openai.OpenAI(base_url = 'http://localhost:11434/v1', api_key='ollama')
+    response = client.chat.completions.create(
+      model="llama2",
+      messages=[{"role": "user", "content": prompt}],
+      max_tokens=max_tokens,
+      temperature=0.7
+    )
+    print(response)
+    return response.choices[0].message.content
+  except Exception as e:
+    return f"GENERATION ERROR: {str(e)}"
+
+
+def gpt_request_old(prompt: str, 
                 model: str = "gpt-4o", 
                 max_tokens: int = 1500) -> str:
   """Make a request to OpenAI's GPT model."""
@@ -152,7 +182,22 @@ def chat_safe_generate(prompt_input: Union[str, List[str]],
 # #################### [SECTION 3: OTHER API FUNCTIONS] ######################
 # ============================================================================
 
+
 def get_text_embedding(text: str, 
+                       model: str = "snowflake-arctic-embed2") -> List[float]:
+  """Generate an embedding for the given text using Ollama Models."""
+  if not isinstance(text, str) or not text.strip():
+    raise ValueError("Input text must be a non-empty string.")
+  client = openai.OpenAI(
+    base_url='http://localhost:11434/v1/',
+    api_key='ollama'
+  )
+  text = text.replace("\n", " ").strip()
+  response = client.embeddings.create(
+    input=[text], model=model).data[0].embedding
+  return response
+
+def get_text_embedding_old(text: str, 
                        model: str = "text-embedding-3-small") -> List[float]:
   """Generate an embedding for the given text using OpenAI's API."""
   if not isinstance(text, str) or not text.strip():
